@@ -10,6 +10,7 @@ GAME_SOURCE_PATH ?= src
 GAME_BUILD_PATH ?= build
 
 GAME_BUILD_MODE ?= RELEASE
+GAME_USE_WAYLAND ?= FALSE
 
 
 #-------------------------------------------------------------------------------
@@ -21,16 +22,14 @@ ifeq ($(PLATFORM),PLATFORM_DESKTOP)
 
 		ifeq ($(UNAME),Linux)
 			PLATFORM_OS = LINUX
+
+			ifneq ($(WAYLAND_DISPLAY),)
+				GAME_USE_WAYLAND = TRUE
+			endif
 		else ifeq ($(UNAME),Darwin)
 			PLATFORM_OS = OSX
 		endif
 	endif
-endif
-
-ifneq ($(WAYLAND_DISPLAY),)
-	GAME_USE_WAYLAND ?= TRUE
-else
-	GAME_USE_WAYLAND ?= FALSE
 endif
 
 
@@ -93,7 +92,7 @@ LDFLAGS = -Wl,--no-undefined
 
 ifeq ($(PLATFORM),PLATFORM_DESKTOP)
 	ifeq ($(PLATFORM_OS),WINDOWS)
-		LDLIBS += -static-libgcc -lopengl32 -lgdi32 -lwinmm
+		LDLIBS += -static -static-libgcc -lopengl32 -lgdi32 -lwinmm
 	else ifeq ($(PLATFORM_OS),LINUX)
 		LDLIBS += -lGL -lpthread -ldl -lrt
 
@@ -202,7 +201,7 @@ RM = rm -rf
 
 ifeq ($(PLATFORM),PLATFORM_DESKTOP)
 	ifeq ($(PLATFORM_OS),WINDOWS)
-		mkdir = $(shell if not exist "$1" mkdir "$1")
+		mkdir = $(shell mkdir "$1" 2>NUL)
 	endif
 endif
 
