@@ -1,5 +1,8 @@
 Game
+Game.exe
+
 build/
+
 compile_flags.txt
-src/external/wayland*.h
+include/wayland*.h
 
