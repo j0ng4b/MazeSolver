@@ -167,11 +167,11 @@ endif
 #-------------------------------------------------------------------------------
 SOURCES += $(wildcard $(GAME_SOURCE_PATH)/*.c)
 
-PATH_SEP = /
+OBJECTS = $(subst $(GAME_SOURCE_PATH)/,$(GAME_BUILD_PATH)/,$(SOURCES:.c=.o))
+DEPENDENCIES = $(OBJECTS:.o=.d)
 
 ifeq ($(PLATFORM),PLATFORM_DESKTOP)
 	ifeq ($(PLATFORM_OS),WINDOWS)
-		PATH_SEP = \\
 		GAME_NAME_EXT := .exe
 	endif
 
@@ -179,10 +179,6 @@ ifeq ($(PLATFORM),PLATFORM_DESKTOP)
 else ifeq ($(PLATFORM),PLATFORM_ANDROID)
 	GAME_NAME_BUILD := $(GAME_NAME).apk
 endif
-
-SOURCES := $(subst /,$(PATH_SEP),$(SOURCES))
-OBJECTS = $(subst $(GAME_SOURCE_PATH)$(PATH_SEP),$(GAME_BUILD_PATH)$(PATH_SEP),$(SOURCES:.c=.o))
-DEPENDENCIES = $(OBJECTS:.o=.d)
 
 
 #-------------------------------------------------------------------------------
@@ -202,12 +198,12 @@ all: $(GAME_NAME_BUILD)
 
 -include $(DEPENDENCIES)
 
-$(GAME_NAME)$(GAME_NAME_EXT): $(OBJECTS)
+$(GAME_NAME_BUILD): $(OBJECTS)
 	$(CC) $^ $(LDFLAGS) $(LDLIBS) -o $@
 
 $(OBJECTS): $(WL_HEADERS)
 
-$(GAME_BUILD_PATH)$(PATH_SEP)%.o: $(GAME_SOURCE_PATH)/%.c
+$(GAME_BUILD_PATH)/%.o: $(GAME_SOURCE_PATH)/%.c
 	$(call mkdir,$(@D))
 	$(CC) -c $< $(CPPFLAGS) $(CFLAGS) -o $@
 
