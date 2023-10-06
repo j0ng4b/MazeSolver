@@ -103,9 +103,6 @@ ifeq ($(PLATFORM),PLATFORM_DESKTOP)
 		LDLIBS += -framework OpenGL -framework Cocoa -framework IOKit \
 				  -framework CoreAudio -framework CoreVideo
 	endif
-else ifeq ($(PLATFORM),PLATFORM_ANDROID)
-	LDLIBS += -llog -landroid -lEGL -lGLESv2 -lOpenSLES
-	LDFLAGS += -shared -u ANativeActivity_onCreate
 endif
 
 
@@ -119,13 +116,6 @@ EXTERNAL_LIB_PATHS = raylib
 EXTERNAL_LIB_IGNORE =
 
 not-containing = $(foreach v,$2,$(if $(findstring $1,$v),,$v))
-
-
-ifeq ($(PLATFORM),PLATFORM_DESKTOP)
-else ifeq ($(PLATFORM),PLATFORM_ANDROID)
-	EXTERNAL_LIB_PATHS += android
-	EXTERNAL_LIB_IGNORE += rglfw.c
-endif
 
 SOURCES = $(foreach path,$(EXTERNAL_LIB_PATHS),$(wildcard $(GAME_SOURCE_PATH)/external/$(path)/*.c))
 
