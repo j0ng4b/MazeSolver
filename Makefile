@@ -169,7 +169,7 @@ RM = rm -rf
 
 ifeq ($(PLATFORM),PLATFORM_DESKTOP)
 	ifeq ($(PLATFORM_OS),WINDOWS)
-		mkdir = $(shell if not exist "$1" mkdir "$1")
+	
 	endif
 endif
 

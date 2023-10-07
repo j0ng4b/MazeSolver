@@ -4,12 +4,9 @@
 #include <string.h>
 
 #include "raylib.h"
-#include "control.h"
 
 
-Vector2 randomPos(int row, int col);
 Vector2 randomPosDisp(int row, int col, int mat[4][4]);
-
 
 int main() {
     srand(time(NULL));
@@ -19,8 +16,8 @@ int main() {
 
     Color colorBackground = {4, 84, 224, 255}, colorButtons = {179, 182, 188, 255}, colorGreen = {37, 204, 68, 255};;
 
-    Image mapa = LoadImage("img/map.png"), play = LoadImage("img/playButton.png");
-    Image personagem = LoadImage("img/mario.png"), princesa = LoadImage("img/princesa.png"), obstaculo = LoadImage("img/goomba.png");
+    Image mapa = LoadImage("assets/map.png"), play = LoadImage("assets/play.png");
+    Image personagem = LoadImage("assets/mario.png"), princesa = LoadImage("assets/princesa.png"), obstaculo = LoadImage("assets/goomba.png");
     Texture2D mapaTexture = LoadTextureFromImage(mapa), playButton = LoadTextureFromImage(play);
     Texture2D personagemTexture = LoadTextureFromImage(personagem), chegadaTexture = LoadTextureFromImage(princesa), obstaculoTexture = LoadTextureFromImage(obstaculo);
 
@@ -62,26 +59,24 @@ int main() {
                     }
                     random = (rand() % 13) + 1;
                     posObstaculo = (Vector2*) malloc(sizeof(Vector2) * random);
-                    while(1){
-                        posPersonagem = randomPos(row, col);
-                        posChegada = randomPos(row, col);
-                        posObstaculo[0] = randomPos(row, col);
-                        if((posPersonagem.x != posChegada.x && posPersonagem.y != posChegada.y) && (posObstaculo[0].x != posPersonagem.x && posObstaculo[0].y != posPersonagem.y) && (posObstaculo[0].x != posChegada.x && posObstaculo[0].y != posChegada.y)){
-                            break;
-                        }
-                    }
+
                     // Preenchendo a matriz
                     memset(mat, 0, sizeof(mat));
+
+                    posPersonagem = randomPosDisp(row, col, mat);
+                    posChegada = randomPosDisp(row, col, mat);
+                    posObstaculo[0] = randomPosDisp(row, col, mat);
+
+
                     mat[(int) posPersonagem.x][(int) posPersonagem.y] = 1;
                     mat[(int) posChegada.x][(int) posChegada.y] = 2;
                     mat[(int) posObstaculo[0].x][(int) posObstaculo[0].y] = -1;
+
                     // Preenche com mais obstaculos
                     for(int i = 1; i < random; i++){
                         posObstaculo[i] = randomPosDisp(row, col, mat);
                     }
-
-
-
+                    // Printa a matriz
                     printf("\n");
                     for(int i = 0; i < 4; i++){
                         printf("|");
@@ -151,14 +146,6 @@ int main() {
     CloseAudioDevice();
     CloseWindow();
     return 0;
-}
-
-
-Vector2 randomPos(int row, int col){
-    Vector2 vector;
-    vector.x = rand() % row;
-    vector.y = rand() % col;
-    return vector;
 }
 
 Vector2 randomPosDisp(int row, int col, int mat[4][4]) {
