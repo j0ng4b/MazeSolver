@@ -77,7 +77,7 @@ LDFLAGS = -Wl,--no-undefined
 
 ifeq ($(PLATFORM),PLATFORM_DESKTOP)
 	ifeq ($(PLATFORM_OS),WINDOWS)
-		LDLIBS += -static-libgcc -lpthread -lopengl32 -lwinmm -lgdi32
+		LDLIBS += -static-libgcc -lopengl32 -lgdi32 -lwinmm
 	else ifeq ($(PLATFORM_OS),LINUX)
 		LDLIBS += -lGL -lpthread -ldl -lrt
 
@@ -169,7 +169,7 @@ RM = rm -rf
 
 ifeq ($(PLATFORM),PLATFORM_DESKTOP)
 	ifeq ($(PLATFORM_OS),WINDOWS)
-		mkdir = $(shell if not exists "$1" mkdir "$1")
+		mkdir = $(shell if not exist "$1" mkdir "$1")
 	endif
 endif
 
