@@ -1,159 +1,175 @@
-#include <stdio.h>
+#include <stdbool.h>
 #include <stdlib.h>
-#include <time.h>
 #include <string.h>
 
 #include "raylib.h"
 
+#define WINDOW_TITLE "MazeSolver"
+#define WINDOW_WIDTH 600
+#define WINDOW_HEIGHT 480
+#define WINDOW_TARGET_FPS 60
 
-Vector2 randomPosDisp(int row, int col, int mat[4][4]);
+#define WALL_SIZE 15
 
-int main() {
-    srand(time(NULL));
-    InitWindow(GetScreenWidth(), GetScreenHeight(), "Maze Solver");
-    ToggleFullscreen();
-    InitAudioDevice();
+enum screen {
+    SCREEN_MENU,
+    SCREEN_MAZE,
+} g_screen = SCREEN_MAZE;
 
-    Color colorBackground = {4, 84, 224, 255}, colorButtons = {179, 182, 188, 255}, colorGreen = {37, 204, 68, 255};;
+typedef enum wall {
+    WALL_EMPTY = 0x00000,
 
-    Image mapa = LoadImage("assets/map.png"), play = LoadImage("assets/play.png");
-    Image personagem = LoadImage("assets/mario.png"), princesa = LoadImage("assets/princesa.png"), obstaculo = LoadImage("assets/goomba.png");
-    Texture2D mapaTexture = LoadTextureFromImage(mapa), playButton = LoadTextureFromImage(play);
-    Texture2D personagemTexture = LoadTextureFromImage(personagem), chegadaTexture = LoadTextureFromImage(princesa), obstaculoTexture = LoadTextureFromImage(obstaculo);
+    WALL_NORTH = 0x00001,
+    WALL_SOUTH = 0x00010,
+    WALL_EAST  = 0x00100,
+    WALL_WEST  = 0x01000,
 
-    Vector2 posMouse, coorCircle = {GetScreenWidth() / 13, GetScreenHeight() / 7 + 280}, posPersonagem, posChegada, *posObstaculo = NULL;
+    WALL_ALL   = 0x01111,
+    WALL_NO    = 0x10000,
+} wall_t;
 
-    Rectangle recReset = {GetScreenWidth() / 25, GetScreenHeight() / 7 + 350, 110, 40};
+typedef struct maze {
+    wall_t *walls;
 
-    int row = 4, col = 4;
+    int width;
+    int height;
+} maze_t;
 
-    int mat[4][4];
+void maze_init(maze_t *maze, int width, int height);
+void maze_create(maze_t *maze);
+void maze_draw(maze_t *maze);
 
-    unsigned short go = 0, auxColor = 0, controllSetMouse = 0, random = 1;
+void screen_maze(maze_t *maze);
 
-    char reset[8] = "Resetar";
+int main(void)
+{
+    InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE);
 
-    while(!WindowShouldClose()){
-        // Aperta m e altera entre o modo de tela cheia
-        if (IsKeyPressed(KEY_M)) {
-            if(IsWindowFullscreen()){
-                ToggleFullscreen();
-            }else{
-                ToggleFullscreen();
-            }
-        }
-        posMouse = GetMousePosition();
+    SetTargetFPS(WINDOW_TARGET_FPS);
+
+    maze_t maze;
+    maze_init(&maze, 30, 30);
+
+    while (!WindowShouldClose()) {
+        ClearBackground(BLACK);
         BeginDrawing();
-        ClearBackground(colorBackground);
-        // Map
-        DrawTexture(mapaTexture, GetScreenWidth() / 6, GetScreenHeight() / 7, WHITE);
-        // Colisão com o start
-        if(CheckCollisionPointCircle(posMouse, coorCircle, 30.f)){
-            controllSetMouse = 0;
-            SetMouseCursor(4);
-            if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)){
-                if(!go){
-                    if(posObstaculo != NULL){
-                        free(posObstaculo);
-                        posObstaculo = NULL;
-                    }
-                    random = (rand() % 13) + 1;
-                    posObstaculo = (Vector2*) malloc(sizeof(Vector2) * random);
 
-                    // Preenchendo a matriz
-                    memset(mat, 0, sizeof(mat));
+        DrawFPS(0, 0);
+        switch (g_screen) {
+        case SCREEN_MENU:
+            break;
 
-                    posPersonagem = randomPosDisp(row, col, mat);
-                    posChegada = randomPosDisp(row, col, mat);
-                    posObstaculo[0] = randomPosDisp(row, col, mat);
-
-
-                    mat[(int) posPersonagem.x][(int) posPersonagem.y] = 1;
-                    mat[(int) posChegada.x][(int) posChegada.y] = 2;
-                    mat[(int) posObstaculo[0].x][(int) posObstaculo[0].y] = -1;
-
-                    // Preenche com mais obstaculos
-                    for(int i = 1; i < random; i++){
-                        posObstaculo[i] = randomPosDisp(row, col, mat);
-                    }
-                    // Printa a matriz
-                    printf("\n");
-                    for(int i = 0; i < 4; i++){
-                        printf("|");
-                        for(int j = 0; j < 4; j++){
-                            printf("%5d", mat[i][j]);
-                        }
-                        printf("     |\n");
-                    }
-                    printf("\n");
-                    go = 1;
-                }
-            }
-        }else{
-            if(controllSetMouse == 0){
-                SetMouseCursor(1);
-            }
+        case SCREEN_MAZE:
+            screen_maze(&maze);
+            break;
         }
-        // Colisão com o reset
-        if(CheckCollisionPointRec(posMouse, recReset)){
-            SetMouseCursor(4);
-            controllSetMouse = 1;
-            if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)){
-                go = 0;
-                auxColor = 400;
-            }
-        }else{
-            if(controllSetMouse == 1){
-                SetMouseCursor(1);
-            }
-        }
-        // Botão de resetar padrão
-        if(auxColor > 0){
-            DrawRectangleRounded(recReset, 0.5, 0, colorGreen);
-            auxColor--;
-        }else{
-            DrawRectangleRounded(recReset, 0.5, 0, colorButtons);
-        }
-        DrawRectangleLinesEx(recReset, 2, BLACK);
-        DrawText(reset, recReset.x + 15, recReset.y + 10, 20, BLACK);
-        // Button Play
-        if(go){
-            // Personagens
-            DrawTexture(personagemTexture, GetScreenWidth() / 6 + 7 + (170 * posPersonagem.y + 30), GetScreenHeight() / 7 + 6 + (140 * posPersonagem.x + 30), WHITE);
-            DrawTexture(chegadaTexture, GetScreenWidth() / 6 + 7 + (170 * posChegada.y + 40), GetScreenHeight() / 7 + 6 + (140 * posChegada.x + 30), WHITE);
-            for(int i = 0; i < random; i++){
-                DrawTexture(obstaculoTexture, GetScreenWidth() / 6 + 7 + (170 * posObstaculo[i].y + 40), GetScreenHeight() / 7 + 6 + (140 * posObstaculo[i].x + 30), WHITE);
-            }
-            DrawCircleV(coorCircle, 27.f, colorGreen);
-        }else{
-            DrawCircleV(coorCircle, 27.f, colorButtons);
-        }
-        // Textura do botão play e borda
-        DrawCircleLines(coorCircle.x, coorCircle.y, 30.f, BLACK);
-        DrawTexture(playButton, coorCircle.x - 10, coorCircle.y - 15, WHITE);
+
         EndDrawing();
     }
 
-    if(posObstaculo != NULL){
-        free(posObstaculo);
-    }
-
-    UnloadTexture(mapaTexture);
-    UnloadTexture(playButton);
-    UnloadTexture(personagemTexture);
-    UnloadTexture(obstaculoTexture);
-    UnloadTexture(chegadaTexture);
-    CloseAudioDevice();
     CloseWindow();
-    return 0;
+    return EXIT_SUCCESS;
 }
 
-Vector2 randomPosDisp(int row, int col, int mat[4][4]) {
-    Vector2 vector;
-    do {
-        vector.x = rand() % row;
-        vector.y = rand() % col;
-    }while(mat[(int) vector.x][(int) vector.y] != 0);
-    mat[(int) vector.x][(int) vector.y] = -1;
-    return vector;
+void screen_maze(maze_t *maze)
+{
+    maze_draw(maze);
 }
+
+void maze_init(maze_t *maze, int width, int height)
+{
+    maze->walls = malloc(sizeof(wall_t) * width * height);
+    memset(maze->walls, WALL_EMPTY, sizeof(wall_t) * width * height);
+
+    maze->width = width;
+    maze->height = height;
+}
+
+static void draw_wall(wall_t wall, Vector2 pos)
+{
+    if (!(wall ^ WALL_ALL)) {
+        Rectangle wall_rect = {
+            .x = pos.x,
+            .y = pos.y,
+
+            .width = WALL_SIZE,
+            .height = WALL_SIZE
+        };
+
+        DrawRectangleLinesEx(wall_rect, 1, WHITE);
+    } else if (wall & WALL_NO) {
+        Rectangle wall_rect = {
+            .x = pos.x,
+            .y = pos.y,
+
+            .width = WALL_SIZE,
+            .height = WALL_SIZE
+        };
+
+        DrawRectangleLinesEx(wall_rect, 1, PINK);
+    } else {
+        Vector2 start_pos;
+        Vector2 end_pos;
+
+        if (wall & WALL_NORTH) {
+            start_pos.x = pos.x;
+            start_pos.y = pos.y;
+
+            end_pos.x = start_pos.x + WALL_SIZE;
+            end_pos.y = start_pos.y;
+
+            DrawLineV(start_pos, end_pos, WHITE);
+        }
+
+        if (wall & WALL_SOUTH) {
+            start_pos.x = pos.x;
+            start_pos.y = pos.y;
+
+            end_pos.x = start_pos.x + WALL_SIZE;
+            end_pos.y = start_pos.y += WALL_SIZE;
+
+            DrawLineV(start_pos, end_pos, WHITE);
+        }
+
+        if (wall & WALL_EAST) {
+            start_pos.x = pos.x;
+            start_pos.y = pos.y;
+
+            end_pos.x = pos.x;
+            end_pos.y = pos.y + WALL_SIZE;
+
+            DrawLineV(start_pos, end_pos, WHITE);
+        }
+
+        if (wall & WALL_WEST) {
+            start_pos.x = pos.x + WALL_SIZE;
+            start_pos.y = pos.y;
+
+            end_pos.x = pos.x + WALL_SIZE;
+            end_pos.y = pos.y + WALL_SIZE;
+
+            DrawLineV(start_pos, end_pos, WHITE);
+        }
+    }
+}
+
+void maze_draw(maze_t *maze)
+{
+    Vector2 pos;
+
+    Vector2 center = {
+        .x = WINDOW_WIDTH / 2.0 - (maze->width * WALL_SIZE) / 2.0,
+        .y = WINDOW_HEIGHT / 2.0 - (maze->height * WALL_SIZE) / 2.0
+    };
+
+    pos.y = center.y;
+    for (int y = 0; y < maze->width; y++) {
+        pos.x = center.x;
+
+        for (int x = 0; x < maze->width; x++, pos.x += WALL_SIZE)
+            draw_wall(maze->walls[x + y * maze->width], pos);
+
+        pos.y += WALL_SIZE;
+    }
+}
+
