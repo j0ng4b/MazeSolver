@@ -169,7 +169,7 @@ RM = rm -rf
 
 ifeq ($(PLATFORM),PLATFORM_DESKTOP)
 	ifeq ($(PLATFORM_OS),WINDOWS)
-	
+
 	endif
 endif
 
