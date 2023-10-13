@@ -14,6 +14,12 @@ void maze_init(maze_t *maze, int width, int height)
 
     maze->width = width;
     maze->height = height;
+
+    maze->start_x = -1;
+    maze->start_y = -1;
+
+    maze->end_x = -1;
+    maze->end_y = -1;
 }
 
 void maze_deinit(maze_t *maze)
@@ -124,6 +130,40 @@ int maze_get_walls(maze_t *maze, int x, int y)
     return maze->walls[x + y * maze->width];
 }
 
+void maze_set_start(maze_t *maze, int x, int y)
+{
+    maze->start_x = x;
+    maze->start_y = y;
+}
+
+bool maze_get_start(maze_t *maze, int *x, int *y)
+{
+    if (x != NULL)
+        *x = maze->start_x;
+
+    if (y != NULL)
+        *y = maze->start_y;
+
+    return maze->start_x != -1 && maze->start_y != -1;
+}
+
+void maze_set_end(maze_t *maze, int x, int y)
+{
+    maze->end_x = x;
+    maze->end_y = y;
+}
+
+bool maze_get_end(maze_t *maze, int *x, int *y)
+{
+    if (x != NULL)
+        *x = maze->end_x;
+
+    if (y != NULL)
+        *y = maze->end_y;
+
+    return maze->end_x != -1 && maze->end_y != -1;
+}
+
 static void draw_walls(int walls, Vector2 pos)
 {
     Vector2 start_pos;
@@ -182,8 +222,17 @@ void maze_draw(maze_t *maze)
     for (int y = 0; y < maze->width; y++) {
         pos.x = center.x;
 
-        for (int x = 0; x < maze->width; x++, pos.x += WALL_SIZE)
+        for (int x = 0; x < maze->width; x++, pos.x += WALL_SIZE) {
             draw_walls(maze->walls[x + y * maze->width], pos);
+
+            if (x == maze->start_x && y == maze->start_y) {
+                DrawCircle(pos.x + WALL_SIZE / 2.0, pos.y + WALL_SIZE / 2.0,
+                    WALL_SIZE / 3.0, GREEN);
+            } else if (x == maze->end_x && y == maze->end_y) {
+                DrawCircle(pos.x + WALL_SIZE / 2.0, pos.y + WALL_SIZE / 2.0,
+                    WALL_SIZE / 3.0, BLUE);
+            }
+        }
 
         pos.y += WALL_SIZE;
     }

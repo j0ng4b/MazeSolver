@@ -1,6 +1,8 @@
 #ifndef MAZESOLVER_MAZE_H
 #define MAZESOLVER_MAZE_H
 
+#include <stdbool.h>
+
 #ifndef WALL_SIZE
 #define WALL_SIZE 15
 #endif // !WALL_SIZE
@@ -21,6 +23,14 @@ typedef struct maze {
 
     int width;
     int height;
+
+    // Ponto de partida
+    int start_x;
+    int start_y;
+
+    // Ponto de chegada
+    int end_x;
+    int end_y;
 } maze_t;
 
 // Inicializa o labirinto sem criá-lo.
@@ -37,6 +47,20 @@ void maze_create(maze_t *maze);
 void maze_set_wall(maze_t *maze, int x, int y, int wall);
 void maze_remove_wall(maze_t *maze, int x, int y, int wall);
 int maze_get_walls(maze_t *maze, int x, int y);
+
+// Define a posição de início do labirinto
+void maze_set_start(maze_t *maze, int x, int y);
+
+// Atribui a x e y a posição de início do labirinto
+// Retorna verdadeiro ou falso caso a posição de início foi definida
+bool maze_get_start(maze_t *maze, int *x, int *y);
+
+// Define a posição final do labirinto
+void maze_set_end(maze_t *maze, int x, int y);
+
+// Atribui a x e y a posição de fim do labirinto
+// Retorna verdadeiro ou falso caso a posição de final foi definida
+bool maze_get_end(maze_t *maze, int *x, int *y);
 
 // Função usada para desenhar um labirinto na tela, ele é desenhado centralizado
 // e usando a WALL_SIZE para o tamanho em pixels de cada parede.
