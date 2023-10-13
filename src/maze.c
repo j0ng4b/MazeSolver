@@ -115,6 +115,16 @@ void maze_create(maze_t *maze)
     free(dirs);
 }
 
+int maze_get_width(maze_t *maze)
+{
+    return maze->width;
+}
+
+int maze_get_height(maze_t *maze)
+{
+    return maze->height;
+}
+
 void maze_set_wall(maze_t *maze, int x, int y, int wall)
 {
     maze->walls[x + y * maze->width] |= wall;

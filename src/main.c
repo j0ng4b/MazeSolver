@@ -70,6 +70,7 @@ void screen_maze(maze_t *maze)
     static Rectangle magnifier    = { 64 * 6, 64 * 1, 64, 64 };
     static Rectangle insert_start = { 64 * 0, 64 * 1, 64, 64 };
     static Rectangle insert_end   = { 64 * 8, 64 * 4, 64, 64 };
+    static Rectangle aim          = { 64 * 3, 64 * 0, 64, 64 };
 
     // Indica se está e o que está sendo inserido no labirinto:
     // 0 -> não está inserindo nada
@@ -77,7 +78,21 @@ void screen_maze(maze_t *maze)
     // 2 -> está inserindo um fim
     static int inserting_location = 0;
 
+    static int inserting_pos_x;
+    static int inserting_pos_y;
+
+    int current_inserted_x;
+    int current_inserted_y;
+
     Color search_color;
+
+    Rectangle maze_bounds = {
+        .x = WINDOW_WIDTH / 2.0 - (maze_get_width(maze) * WALL_SIZE) / 2.0,
+        .y = WINDOW_HEIGHT / 2.0 - (maze_get_height(maze) * WALL_SIZE) / 2.0,
+
+        .width = maze_get_width(maze) * WALL_SIZE,
+        .height = maze_get_height(maze) * WALL_SIZE
+    };
 
     // Especifica a posição e o tamanho de uma imagem
     Rectangle dest = {
@@ -96,18 +111,98 @@ void screen_maze(maze_t *maze)
     else
         search_color = DARKGRAY;
 
-    DrawTexturePro(g_icons_lucid, magnifier, dest, (Vector2) { 0, 0 }, 0, search_color);
+    DrawTexturePro(g_icons_lucid, magnifier, dest,
+        (Vector2) { 0, 0 }, 0, search_color);
 
     // Inserir início
     dest.x = WINDOW_WIDTH - 42;
     dest.y = 52;
-    DrawTexturePro(g_icons_lucid, insert_start, dest, (Vector2) { 0, 0 }, 0, WHITE);
 
+    if (inserting_location == 1) {
+        dest.x += 5;
+        dest.y += 5;
+
+        dest.width -= 10;
+        dest.height -= 10;
+    }
+
+    DrawTexturePro(g_icons_lucid, insert_start, dest,
+        (Vector2) { 0, 0 }, 0, WHITE);
+
+    if (inserting_location == 1) {
+        dest.x -= 5;
+        dest.y -= 5;
+
+        dest.width += 10;
+        dest.height += 10;
+    }
+
+    if (CheckCollisionPointRec(GetMousePosition(), dest)
+            && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+        inserting_location = !(inserting_location == 1);
 
     // Inserir fim
     dest.x = WINDOW_WIDTH - 42;
     dest.y = 92;
-    DrawTexturePro(g_icons_lucid, insert_end, dest, (Vector2) { 0, 0 }, 0, WHITE);
 
+    if (inserting_location == 2) {
+        dest.x += 5;
+        dest.y += 5;
+
+        dest.width -= 10;
+        dest.height -= 10;
+    }
+
+    DrawTexturePro(g_icons_lucid, insert_end, dest,
+        (Vector2) { 0, 0 }, 0, WHITE);
+
+    if (inserting_location == 2) {
+        dest.x -= 5;
+        dest.y -= 5;
+
+        dest.width += 10;
+        dest.height += 10;
+    }
+
+    if (CheckCollisionPointRec(GetMousePosition(), dest)
+            && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+        inserting_location = !(inserting_location == 2) * 2;
+
+    if (inserting_location > 0
+            && CheckCollisionPointRec(GetMousePosition(), maze_bounds)) {
+        HideCursor();
+
+        dest.width = dest.height = 16;
+        dest.x = GetMouseX() - dest.width / 2.0;
+        dest.y = GetMouseY() - dest.height / 2.0;
+
+        DrawTexturePro(g_icons_lucid, aim, dest,
+            (Vector2) { 0, 0 }, 0, WHITE);
+
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+            inserting_pos_x = (GetMouseX() - maze_bounds.x) / WALL_SIZE;
+            inserting_pos_y = (GetMouseY() - maze_bounds.y) / WALL_SIZE;
+
+            if (inserting_location == 1) {
+                maze_get_start(maze, &current_inserted_x, &current_inserted_y);
+
+                if (current_inserted_x == inserting_pos_x
+                        && current_inserted_y == inserting_pos_y)
+                    inserting_pos_x = inserting_pos_y = -1;
+
+                maze_set_start(maze, inserting_pos_x, inserting_pos_y);
+            } else {
+                maze_get_end(maze, &current_inserted_x, &current_inserted_y);
+
+                if (current_inserted_x == inserting_pos_x
+                        && current_inserted_y == inserting_pos_y)
+                    inserting_pos_x = inserting_pos_y = -1;
+
+                maze_set_end(maze, inserting_pos_x, inserting_pos_y);
+            }
+        }
+    } else {
+        ShowCursor();
+    }
 }
 

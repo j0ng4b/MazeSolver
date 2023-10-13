@@ -42,6 +42,10 @@ void maze_deinit(maze_t *maze);
 // Efetivamente cria o labirinto.
 void maze_create(maze_t *maze);
 
+// Retorna a largura e a altura do labirinto, respectivamente.
+int maze_get_width(maze_t *maze);
+int maze_get_height(maze_t *maze);
+
 // Funções para definir, remover (respectivamente) as paredes de uma célula do
 // labirinto.
 void maze_set_wall(maze_t *maze, int x, int y, int wall);
