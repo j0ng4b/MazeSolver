@@ -67,10 +67,15 @@ int main(void)
 void screen_maze(maze_t *maze)
 {
     // Posições dos ícones da folha de sprites (spritesheet)
-    static Rectangle magnifier    = { 64 * 6, 64 * 1, 64, 64 };
-    static Rectangle insert_start = { 64 * 0, 64 * 1, 64, 64 };
-    static Rectangle insert_end   = { 64 * 8, 64 * 4, 64, 64 };
-    static Rectangle aim          = { 64 * 3, 64 * 0, 64, 64 };
+    static Rectangle magnifier     = { 64 * 6, 64 * 1, 64, 64 };
+    static Rectangle insert_start  = { 64 * 0, 64 * 1, 64, 64 };
+    static Rectangle insert_end    = { 64 * 8, 64 * 4, 64, 64 };
+    static Rectangle aim           = { 64 * 3, 64 * 0, 64, 64 };
+
+    static Rectangle run           = { 64 * 4, 64 * 7, 64, 64 };
+    static Rectangle stop_find     = { 64 * 9, 64 * 8, 64, 64 };
+    static Rectangle step_next     = { 64 * 5, 64 * 5, 64, 64 };
+    static Rectangle step_previous = { 64 * 6, 64 * 5, 64, 64 };
 
     // Indica se está e o que está sendo inserido no labirinto:
     // 0 -> não está inserindo nada
@@ -80,6 +85,8 @@ void screen_maze(maze_t *maze)
 
     static int inserting_pos_x;
     static int inserting_pos_y;
+
+    static bool finding_solution = false;
 
     int current_inserted_x;
     int current_inserted_y;
@@ -106,10 +113,47 @@ void screen_maze(maze_t *maze)
     dest.x = WINDOW_WIDTH - 42;
     dest.y = 10;
 
-    if (maze_get_start(maze, NULL, NULL) && maze_get_end(maze, NULL, NULL))
+    if (maze_get_start(maze, NULL, NULL) && maze_get_end(maze, NULL, NULL)) {
         search_color = WHITE;
-    else
+
+        if (CheckCollisionPointRec(GetMousePosition(), dest)
+                && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+            finding_solution = !finding_solution;
+        }
+    } else {
         search_color = DARKGRAY;
+    }
+
+    if (finding_solution) {
+        DrawTexturePro(g_icons_lucid, stop_find, dest,
+            (Vector2) { 0, 0 }, 0, search_color);
+
+        dest.width = dest.height = 22;
+
+        // Botão de execução
+        dest.x = WINDOW_WIDTH - 37;
+        dest.y = 52;
+
+        DrawTexturePro(g_icons_lucid, run, dest,
+            (Vector2) { 0, 0 }, 0, WHITE);
+
+        // Botão de avançar
+        dest.x = WINDOW_WIDTH - 37;
+        dest.y = 84;
+
+        DrawTexturePro(g_icons_lucid, step_next, dest,
+            (Vector2) { 0, 0 }, 0, WHITE);
+
+        // Botão de retroceder
+        dest.x = WINDOW_WIDTH - 37;
+        dest.y = 116;
+
+        DrawTexturePro(g_icons_lucid, step_previous, dest,
+            (Vector2) { 0, 0 }, 0, WHITE);
+
+        // Não desenha nada abaixo
+        return;
+    }
 
     DrawTexturePro(g_icons_lucid, magnifier, dest,
         (Vector2) { 0, 0 }, 0, search_color);
