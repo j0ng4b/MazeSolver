@@ -74,8 +74,8 @@ void screen_maze(maze_t *maze)
 
     static Rectangle run           = { 64 * 4, 64 * 7, 64, 64 };
     static Rectangle stop_find     = { 64 * 9, 64 * 8, 64, 64 };
-    static Rectangle step_next     = { 64 * 5, 64 * 5, 64, 64 };
-    static Rectangle step_previous = { 64 * 6, 64 * 5, 64, 64 };
+    static Rectangle step_next     = { 64 * 6, 64 * 5, 64, 64 };
+    static Rectangle step_previous = { 64 * 5, 64 * 5, 64, 64 };
 
     // Indica se está e o que está sendo inserido no labirinto:
     // 0 -> não está inserindo nada
