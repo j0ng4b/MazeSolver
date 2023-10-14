@@ -1,51 +1,46 @@
-#-------------------------------------------------------------------------------
+#######################
+## Variables to control the build
 PLATFORM ?= PLATFORM_DESKTOP
 
-
-#-------------------------------------------------------------------------------
 GAME_NAME ?= Game
 GAME_VERSION = 0.0.1
 
 GAME_BUILD_MODE ?= RELEASE
 GAME_USE_WAYLAND ?= FALSE
 
-
-#-------------------------------------------------------------------------------
+#######################
+## OS detection section
 ifeq ($(PLATFORM),PLATFORM_DESKTOP)
 	ifeq ($(OS),Windows_NT)
 		PLATFORM_OS = WINDOWS
-		EXTERNAL_LIB_PLATFORM = windows
 	else
 		UNAME = $(shell uname -s)
 
 		ifeq ($(UNAME),Linux)
 			PLATFORM_OS = LINUX
-			EXTERNAL_LIB_PLATFORM = linux
 
 			ifneq ($(WAYLAND_DISPLAY),)
 				GAME_USE_WAYLAND = TRUE
 			endif
 		else ifeq ($(UNAME),Darwin)
 			PLATFORM_OS = OSX
-			EXTERNAL_LIB_PLATFORM = macos
 		endif
 	endif
 endif
 
-
-#-------------------------------------------------------------------------------
+#######################
+## OpenGL version selection
 ifeq ($(PLATFORM),PLATFORM_DESKTOP)
 	GRAPHICS ?= GRAPHICS_API_OPENGL_33
 else ifeq ($(PLATFORM),PLATFORM_ANDROID)
 	GRAPHICS = GRAPHICS_API_OPENGL_ES2
 endif
 
-
-#-------------------------------------------------------------------------------
+#######################
+## Compiler setup
 CC = gcc
 CFLAGS = -Wall -Wextra -Wpedantic -std=c11
 CPPFLAGS = -D$(PLATFORM) -D$(GRAPHICS) -D_GNU_SOURCE -MMD -MP
-
 
 ifeq ($(PLATFORM),PLATFORM_DESKTOP)
 	ifeq ($(PLATFORM_OS),OSX)
@@ -65,13 +60,22 @@ ifeq ($(GAME_USE_WAYLAND),TRUE)
 	CPPFLAGS += -D_GLFW_WAYLAND
 endif
 
+#######################
+## Includes
+INCLUDE_PATHS = include src/external src/external/raylib
 
-#-------------------------------------------------------------------------------
-INCLUDE_PATHS = include
+ifeq ($(PLATFORM),PLATFORM_DESKTOP)
+	INCLUDE_PATHS += src/external/raylib/external/glfw/include
+
+	ifeq ($(PLATFORM_OS),WINDOWS)
+		INCLUDE_PATHS += src/external/raylib/external/glfw/deps/mingw
+	endif
+endif
+
 CPPFLAGS += $(foreach path,$(INCLUDE_PATHS),-I$(path))
 
-
-#-------------------------------------------------------------------------------
+#######################
+## Libraries to link on
 LDLIBS = -lm
 LDFLAGS = -Wl,--no-undefined
 
@@ -90,22 +94,18 @@ ifeq ($(PLATFORM),PLATFORM_DESKTOP)
 	endif
 endif
 
-
 ifeq ($(GAME_USE_WAYLAND),TRUE)
 	LDLIBS += -lwayland-client -lwayland-cursor -lwayland-egl -lxkbcommon
 endif
 
+######################
+## Third-party libraries
+EXTERNAL_LIB_PATHS = raylib
 
-#-------------------------------------------------------------------------------
-EXTERNAL_LIBS = raylib
+SOURCES = $(foreach path,$(EXTERNAL_LIB_PATHS),$(wildcard src/external/$(path)/*.c))
 
-CPPFLAGS += $(foreach path,$(EXTERNAL_LIBS),-Ilib/$(path)/include)
-
-LDFLAGS += $(foreach path,$(EXTERNAL_LIBS),-Llib/$(path)/lib/$(EXTERNAL_LIB_PLATFORM))
-LDLIBS := $(foreach path,$(EXTERNAL_LIBS),-l$(path)) $(LDLIBS)
-
-
-#-------------------------------------------------------------------------------
+######################
+## Wayland stuff
 ifeq ($(GAME_USE_WAYLAND),TRUE)
 	WL_PROTOCOLS_DIR = $(shell pkg-config wayland-protocols --variable=pkgdatadir)
 	WL_PROTOCOLS = stable/xdg-shell/xdg-shell.xml \
@@ -131,7 +131,7 @@ ifeq ($(GAME_USE_WAYLAND),TRUE)
 
 	# Add output path to wayland headers and -code header
 	WL_HEADERS := $(foreach header,$(WL_HEADERS), \
-						include/$(header).h)
+						src/external/$(header).h)
 
 	WL_PAIRS = $(join $(WL_CLIENT) $(WL_PROTOCOLS), \
 						$(foreach header,$(WL_HEADERS),-$(header)))
@@ -140,30 +140,29 @@ ifeq ($(GAME_USE_WAYLAND),TRUE)
 	wl_generate = \
 		$(eval protocol=$1) \
 		$(eval basename=$2) \
-		$(shell mkdir -p include ; \
-			wayland-scanner client-header $(protocol) $(basename $(basename)).h) \
-		$(shell mkdir -p include ; \
-			wayland-scanner private-code $(protocol) $(basename $(basename))-code.h)
+		$(shell wayland-scanner client-header $(protocol) $(basename $(basename)).h) \
+		$(shell wayland-scanner private-code $(protocol) $(basename $(basename))-code.h)
 endif
 
-#-------------------------------------------------------------------------------
+######################
+## Sources, objects and auto dependencies setup
 SOURCES += $(wildcard src/*.c)
 
 OBJECTS = $(subst src/,build/,$(SOURCES:.c=.o))
 DEPENDENCIES = $(OBJECTS:.o=.d)
 
+######################
+## Binary name
 ifeq ($(PLATFORM),PLATFORM_DESKTOP)
 	ifeq ($(PLATFORM_OS),WINDOWS)
 		GAME_NAME_EXT := .exe
 	endif
 
 	GAME_NAME_BUILD := $(GAME_NAME)$(GAME_NAME_EXT)
-else ifeq ($(PLATFORM),PLATFORM_ANDROID)
-	GAME_NAME_BUILD := $(GAME_NAME).apk
 endif
 
-
-#-------------------------------------------------------------------------------
+######################
+## Some utilities tools
 mkdir = $(shell mkdir -p $1)
 RM = rm -rf
 
@@ -173,8 +172,8 @@ ifeq ($(PLATFORM),PLATFORM_DESKTOP)
 	endif
 endif
 
-
-#-------------------------------------------------------------------------------
+######################
+## Targets
 .PHONY: all
 all: $(GAME_NAME_BUILD)
 
@@ -192,7 +191,7 @@ build/%.o: src/%.c
 $(WL_HEADERS): $(WL_PROTOCOLS) $(WL_CLIENT)
 	@echo "Generating Wayland headers..."
 	$(foreach pair,$(WL_PAIRS), \
-			$(let protocol basename,$(subst .xml-include/,.xml include/,$(pair)), \
+			$(let protocol basename,$(subst .xml-src/,.xml src/,$(pair)), \
 					$(call wl_generate $(protocol),$(basename))))
 
 .PHONY: clean
