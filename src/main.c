@@ -73,6 +73,7 @@ void screen_maze(maze_t *maze)
     static Rectangle aim           = { 64 * 3, 64 * 0, 64, 64 };
 
     static Rectangle run           = { 64 * 4, 64 * 7, 64, 64 };
+    static Rectangle pause         = { 64 * 8, 64 * 8, 64, 64 };
     static Rectangle stop_find     = { 64 * 9, 64 * 8, 64, 64 };
     static Rectangle step_next     = { 64 * 6, 64 * 5, 64, 64 };
     static Rectangle step_previous = { 64 * 5, 64 * 5, 64, 64 };
@@ -87,6 +88,8 @@ void screen_maze(maze_t *maze)
     static int inserting_pos_y;
 
     static bool finding_solution = false;
+
+    static bool running_solver = false;
 
     int current_inserted_x;
     int current_inserted_y;
@@ -107,6 +110,9 @@ void screen_maze(maze_t *maze)
         .height = 32
     };
 
+    if (running_solver)
+        maze_solver_run(maze);
+
     maze_draw(maze);
 
     // Lupa
@@ -120,6 +126,7 @@ void screen_maze(maze_t *maze)
                 && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             finding_solution = !finding_solution;
             inserting_location = 0;
+            running_solver = 0;
 
             if (finding_solution)
                 maze_solver_start(maze);
@@ -140,8 +147,13 @@ void screen_maze(maze_t *maze)
         dest.x = WINDOW_WIDTH - 37;
         dest.y = 52;
 
-        DrawTexturePro(g_icons_lucid, run, dest,
+        DrawTexturePro(g_icons_lucid, running_solver ? pause : run, dest,
             (Vector2) { 0, 0 }, 0, maze_solved(maze) ? GRAY : WHITE);
+
+        if (!maze_solved(maze)
+                && CheckCollisionPointRec(GetMousePosition(), dest)
+                && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+            running_solver = !running_solver;
 
         // Botão de avançar
         dest.x = WINDOW_WIDTH - 37;
@@ -149,9 +161,9 @@ void screen_maze(maze_t *maze)
 
         DrawTexturePro(g_icons_lucid, step_next, dest,
             (Vector2) { 0, 0 }, 0,
-            maze_solved(maze) ? GRAY : WHITE);
+            running_solver || maze_solved(maze) ? GRAY : WHITE);
 
-        if (!maze_solved(maze)
+        if (!running_solver && !maze_solved(maze)
                 && CheckCollisionPointRec(GetMousePosition(), dest)
                 && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
             maze_solver_step_next(maze);
@@ -162,9 +174,9 @@ void screen_maze(maze_t *maze)
 
         DrawTexturePro(g_icons_lucid, step_previous, dest,
             (Vector2) { 0, 0 }, 0,
-            maze_solved(maze) ? GRAY : WHITE);
+            running_solver || maze_solved(maze) ? GRAY : WHITE);
 
-        if (!maze_solved(maze)
+        if (!running_solver && !maze_solved(maze)
                 && CheckCollisionPointRec(GetMousePosition(), dest)
                 && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
             maze_solver_step_previous(maze);

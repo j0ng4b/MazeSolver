@@ -22,6 +22,7 @@ void maze_init(maze_t *maze, int width, int height)
     maze->end_y = -1;
 
     maze->solved = false;
+    maze->solver_run_delay = 0;
 
     maze->stack.top = -1;
     maze->stack.capacity = -1;
@@ -276,6 +277,8 @@ void maze_solver_start(maze_t *maze)
     maze->stack.states[maze->stack.top].direction = 0;
     maze->stack.states[maze->stack.top].valid_directions =
         maze_get_walls(maze, maze->start_x, maze->start_y) ^ 0xF;
+
+    maze->solver_current_time = 0;
 }
 
 void maze_solver_reset(maze_t *maze)
@@ -290,6 +293,13 @@ void maze_solver_reset(maze_t *maze)
 
 void maze_solver_run(maze_t *maze)
 {
+    if (maze->solved)
+        return;
+
+    if ((GetTime() - maze->solver_current_time) * 1000 >= maze->solver_run_delay) {
+        maze_solver_step_next(maze);
+        maze->solver_current_time = GetTime();
+    }
 }
 
 void maze_solver_step_next(maze_t *maze)

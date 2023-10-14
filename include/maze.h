@@ -42,6 +42,9 @@ typedef struct maze {
 
     bool solved;
 
+    int solver_run_delay;
+    double solver_current_time;
+
     struct {
         int top;
         int capacity;
