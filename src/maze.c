@@ -20,10 +20,17 @@ void maze_init(maze_t *maze, int width, int height)
 
     maze->end_x = -1;
     maze->end_y = -1;
+
+    maze->solved = false;
+
+    maze->stack.top = -1;
+    maze->stack.capacity = -1;
+    maze->stack.states = NULL;
 }
 
 void maze_deinit(maze_t *maze)
 {
+    maze_solver_reset(maze);
     free(maze->walls);
 }
 
@@ -242,9 +249,119 @@ void maze_draw(maze_t *maze)
                 DrawCircle(pos.x + WALL_SIZE / 2.0, pos.y + WALL_SIZE / 2.0,
                     WALL_SIZE / 3.0, BLUE);
             }
+
+            for (int i = 0; i <= maze->stack.top; i++)
+                if (x == maze->stack.states[i].pos_x
+                    && y == maze->stack.states[i].pos_y)
+                    DrawCircle(pos.x + WALL_SIZE / 2.0, pos.y + WALL_SIZE / 2.0,
+                        WALL_SIZE / 3.0, RED);
         }
 
         pos.y += WALL_SIZE;
     }
+}
+
+void maze_solver_start(maze_t *maze)
+{
+    maze->solved = false;
+
+    maze->stack.top = -1;
+    maze->stack.capacity = 10;
+    maze->stack.states = malloc(sizeof(solver_state_t) * maze->stack.capacity);
+
+    maze->stack.top++;
+    maze->stack.states[maze->stack.top].pos_x = maze->start_x;
+    maze->stack.states[maze->stack.top].pos_y = maze->start_y;
+
+    maze->stack.states[maze->stack.top].direction = 0;
+    maze->stack.states[maze->stack.top].valid_directions =
+        maze_get_walls(maze, maze->start_x, maze->start_y) ^ 0xF;
+}
+
+void maze_solver_reset(maze_t *maze)
+{
+    if (maze->stack.states != NULL)
+        free(maze->stack.states);
+
+    maze->stack.top = -1;
+    maze->stack.capacity = 0;
+    maze->stack.states = NULL;
+}
+
+void maze_solver_run(maze_t *maze)
+{
+}
+
+void maze_solver_step_next(maze_t *maze)
+{
+    if (maze->solved)
+        return;
+
+    int opposite_dir[] = { 1, 0, 3, 2 };
+    solver_state_t state = maze->stack.states[maze->stack.top--];
+
+    // Seleciona a próxima direção válida
+    while (!(state.valid_directions & (1 << state.direction))
+            && state.direction < 4)
+        state.direction++;
+
+    // Armazena o estado novamente na stack mas indicado que deve ser verificado
+    // a próxima direção.
+    state.direction++;
+    maze->stack.states[++maze->stack.top] = state;
+
+    // Direção atual:
+    state.direction--;
+    if (state.direction == 0) {
+        if (state.pos_y - 1 >= 0)
+            state.pos_y--;
+    } else if (state.direction == 1) {
+        if (state.pos_y + 1 < maze->height)
+            state.pos_y++;
+    } else if (state.direction == 2) {
+        if (state.pos_x - 1 >= 0)
+            state.pos_x--;
+    } else if (state.direction == 3) {
+        if (state.pos_x + 1 < maze->width)
+            state.pos_x++;
+    } else {
+        maze->stack.top--;
+        return;
+    }
+
+    if (maze->stack.top + 1 >= maze->stack.capacity) {
+        maze->stack.capacity *= 2;
+        maze->stack.states = realloc(maze->stack.states,
+            sizeof(solver_state_t) * maze->stack.capacity);
+    }
+
+    maze->stack.states[++maze->stack.top] = (solver_state_t) {
+        .pos_x = state.pos_x,
+        .pos_y = state.pos_y,
+
+        .direction = 0,
+        .valid_directions =
+            maze_get_walls(maze, state.pos_x, state.pos_y) ^ 0xF
+                // A direção que levou a aquela posição não pode ser considerada
+                // uma direção valida, por isso é removida.
+                ^ (1 << opposite_dir[state.direction])
+    };
+
+    if (state.pos_x == maze->end_x && state.pos_y == maze->end_y)
+        maze->solved = true;
+}
+
+void maze_solver_step_previous(maze_t *maze)
+{
+    if (maze->solved)
+        return;
+
+    if (maze->stack.top >= 0)
+        maze->stack.top--;
+}
+
+bool maze_solved(maze_t *maze)
+{
+    return maze->solved;
 }
 

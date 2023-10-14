@@ -119,6 +119,12 @@ void screen_maze(maze_t *maze)
         if (CheckCollisionPointRec(GetMousePosition(), dest)
                 && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             finding_solution = !finding_solution;
+            inserting_location = 0;
+
+            if (finding_solution)
+                maze_solver_start(maze);
+            else
+                maze_solver_reset(maze);
         }
     } else {
         search_color = DARKGRAY;
@@ -135,21 +141,33 @@ void screen_maze(maze_t *maze)
         dest.y = 52;
 
         DrawTexturePro(g_icons_lucid, run, dest,
-            (Vector2) { 0, 0 }, 0, WHITE);
+            (Vector2) { 0, 0 }, 0, maze_solved(maze) ? GRAY : WHITE);
 
         // Botão de avançar
         dest.x = WINDOW_WIDTH - 37;
         dest.y = 84;
 
         DrawTexturePro(g_icons_lucid, step_next, dest,
-            (Vector2) { 0, 0 }, 0, WHITE);
+            (Vector2) { 0, 0 }, 0,
+            maze_solved(maze) ? GRAY : WHITE);
+
+        if (!maze_solved(maze)
+                && CheckCollisionPointRec(GetMousePosition(), dest)
+                && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+            maze_solver_step_next(maze);
 
         // Botão de retroceder
         dest.x = WINDOW_WIDTH - 37;
         dest.y = 116;
 
         DrawTexturePro(g_icons_lucid, step_previous, dest,
-            (Vector2) { 0, 0 }, 0, WHITE);
+            (Vector2) { 0, 0 }, 0,
+            maze_solved(maze) ? GRAY : WHITE);
+
+        if (!maze_solved(maze)
+                && CheckCollisionPointRec(GetMousePosition(), dest)
+                && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+            maze_solver_step_previous(maze);
 
         // Não desenha nada abaixo
         return;

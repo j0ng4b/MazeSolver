@@ -18,6 +18,14 @@ typedef enum wall {
     WALL_ALL = WALL_NORTH | WALL_SOUTH | WALL_WEST | WALL_EAST
 } wall_t;
 
+typedef struct solver_state {
+    int pos_x;
+    int pos_y;
+
+    int direction;
+    int valid_directions;
+} solver_state_t;
+
 typedef struct maze {
     wall_t *walls;
 
@@ -31,6 +39,15 @@ typedef struct maze {
     // Ponto de chegada
     int end_x;
     int end_y;
+
+    bool solved;
+
+    struct {
+        int top;
+        int capacity;
+
+        solver_state_t *states;
+    } stack;
 } maze_t;
 
 // Inicializa o labirinto sem criá-lo.
@@ -69,6 +86,24 @@ bool maze_get_end(maze_t *maze, int *x, int *y);
 // Função usada para desenhar um labirinto na tela, ele é desenhado centralizado
 // e usando a WALL_SIZE para o tamanho em pixels de cada parede.
 void maze_draw(maze_t *maze);
+
+// Inicia o solucionador de labirinto
+void maze_solver_start(maze_t *maze);
+
+// Remove os dados da inicialização do solucionador
+void maze_solver_reset(maze_t *maze);
+
+// Executa o solucionador até encontrar o ponto final
+void maze_solver_run(maze_t *maze);
+
+// Executa um passo em frente para encontrar o ponto final
+void maze_solver_step_next(maze_t *maze);
+
+// Retrocede um passo no processo de encontrar o ponto final
+void maze_solver_step_previous(maze_t *maze);
+
+// Retorna verdadeiro quando o caminho for achado
+bool maze_solved(maze_t *maze);
 
 #endif /* MAZESOLVER_MAZE_H */
 
