@@ -148,18 +148,22 @@ endif
 ## Sources, objects and auto dependencies setup
 SOURCES += $(wildcard src/*.c)
 
-OBJECTS = $(subst src/,build/,$(SOURCES:.c=.o))
-DEPENDENCIES = $(OBJECTS:.o=.d)
+PATH_SEP = /
 
 ######################
 ## Binary name
 ifeq ($(PLATFORM),PLATFORM_DESKTOP)
 	ifeq ($(PLATFORM_OS),WINDOWS)
+		PATH_SEP = \\
 		GAME_NAME_EXT := .exe
 	endif
 
 	GAME_NAME_BUILD := $(GAME_NAME)$(GAME_NAME_EXT)
 endif
+
+SOURCES := $(subst /,$(PATH_SEP),$(SOURCES))
+OBJECTS = $(subst src$(PATH_SEP),build$(PATH_SEP),$(SOURCES:.c=.o))
+DEPENDENCIES = $(OBJECTS:.o=.d)
 
 ######################
 ## Some utilities tools
@@ -168,7 +172,7 @@ RM = rm -rf
 
 ifeq ($(PLATFORM),PLATFORM_DESKTOP)
 	ifeq ($(PLATFORM_OS),WINDOWS)
-
+		mkdir = $(shell if not exist "$1" mkdir "$1")
 	endif
 endif
 
@@ -184,7 +188,8 @@ $(GAME_NAME_BUILD): $(OBJECTS)
 
 $(OBJECTS): $(WL_HEADERS)
 
-build/%.o: src/%.c
+build$(PATH_SEP)%.o: src/%.c
+	@echo "Creating build directory $(@D)"
 	$(call mkdir,$(@D))
 	$(CC) -c $< $(CPPFLAGS) $(CFLAGS) -o $@
 
