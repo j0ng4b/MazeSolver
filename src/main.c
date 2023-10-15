@@ -12,7 +12,7 @@
 enum screen {
     SCREEN_MENU,
     SCREEN_MAZE,
-} g_screen = SCREEN_MAZE;
+} g_screen = SCREEN_MENU;
 
 /* Essa é a tela onde tem todas as opções para trabalhar no labirinto
 *    Opções:
@@ -25,9 +25,19 @@ enum screen {
 *        2. mostrar resposta direto
  */
 void screen_maze(maze_t *maze);
-
+void screen_initial();
 // Variáveis globais
 Texture g_icons_lucid;
+Font font_nome;
+Color corTransparente;
+Texture2D startTexture;
+Texture2D finishTexture;
+Texture2D labTexture;
+Texture2D backTexture;
+Rectangle recStart;
+Rectangle recFinish;
+Vector2 posMouse;
+
 
 int main(void)
 {
@@ -35,8 +45,18 @@ int main(void)
 
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE);
     SetTargetFPS(WINDOW_TARGET_FPS);
-
+    //TEXTURES
     g_icons_lucid = LoadTexture("assets/IconsLucid.png");
+    font_nome = LoadFontEx("assets/Symtext.ttf", 32, 0, 250);
+    corTransparente = (Color){255, 0, 0, 128};
+    Image start = LoadImage("assets/start.png");
+    Image finish = LoadImage("assets/finish.png");
+    Image labirinto = LoadImage("assets/labirinto.png");
+    Image back = LoadImage("assets/background.png");
+    startTexture = LoadTextureFromImage(start);
+    finishTexture = LoadTextureFromImage(finish);
+    labTexture = LoadTextureFromImage(labirinto);
+    backTexture = LoadTextureFromImage(back);
 
     maze_t maze;
     maze_init(&maze, 30, 30);
@@ -48,6 +68,7 @@ int main(void)
 
         switch (g_screen) {
         case SCREEN_MENU:
+             screen_initial();
             break;
 
         case SCREEN_MAZE:
@@ -59,6 +80,11 @@ int main(void)
     }
 
     UnloadTexture(g_icons_lucid);
+    UnloadTexture(g_icons_lucid);
+    UnloadTexture(labTexture);
+    UnloadTexture(backTexture);
+    UnloadTexture(startTexture);
+    UnloadTexture(finishTexture);
 
     CloseWindow();
     return EXIT_SUCCESS;
@@ -279,4 +305,42 @@ void screen_maze(maze_t *maze)
         ShowCursor();
     }
 }
+void screen_initial() {
+    posMouse = GetMousePosition();
+    recStart = (Rectangle){(GetScreenWidth() - startTexture.width) / 8, (GetScreenHeight() - startTexture.height) / 3.5, startTexture.width, startTexture.height};
+    recFinish = (Rectangle){(GetScreenWidth() - startTexture.width) / 1.7 + startTexture.width, (GetScreenHeight() - startTexture.height) / 1.35 + startTexture.height, finishTexture.width, finishTexture.height};
+
+    ClearBackground(RAYWHITE);
+
+    // DRAW BACKGROUND
+    DrawTexture(backTexture, 0, 0, WHITE);
+
+    // DRAW INITIAL MAZER
+    DrawTexture(labTexture, (GetScreenWidth() - labTexture.width) / 4.5, (GetScreenHeight() - labTexture.height) / 2, corTransparente);
+
+    // DRAW BUTTONS "Start" AND "Finish"
+    DrawTexture(startTexture, recStart.x, recStart.y, WHITE);
+    DrawTexture(finishTexture, recFinish.x, recFinish.y, WHITE);
+
+    // DRAW TEXT
+    DrawTextEx(font_nome, "MAZE SOLVER!", (Vector2){GetScreenWidth() / 6, 50}, 56, 2, GOLD);
+
+    // CHECK "Start"
+    if (CheckCollisionPointRec(posMouse, recStart)) {
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+            g_screen = SCREEN_MAZE; // Mudar para a tela de labirinto
+        }
+    }
+
+    // CHECK "Finish"
+    if (CheckCollisionPointRec(posMouse, recFinish)) {
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+                CloseWindow();
+        }
+    }
+
+}
+
+
+
 
