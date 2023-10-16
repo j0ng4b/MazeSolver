@@ -69,6 +69,16 @@ Botão de busca:: Apenas ativo quando os pontos foram definidos, quando clicado 
 
 Botões de pontos:: Também nada complexo, um adiciona ou remove o ponto inicial do labirinto e o outro faz o mesmo, mas para o ponto final.
 
+==== Controles do solucionador
+Ao clicar no botão de busca é exibido os botões usados para controlar o solucionador sendo eles: voltar para a interface anterior, executar/parar solucionador, avançar um passo e retroceder um passo.
+
+[horizontal]
+Voltar:: Sem segredos, ao clicar faz retornar a interface anterior.
+
+Executar ou parar solucionador:: Quando não em execução faz o solucionador procurar o caminho do ponto inicial ao final a partir do último passo dado. Quando já em execução faz parar o solucionador no passo atual.
+
+Botões de passo:: Com eles é possível fazer o solucionador "`andar`" ou retrocederfootnote:[ao retroceder, as direções já testadas do passo não serão mais testadas novamente.] um passo, muito simples.
+
 === Funcionalidades
 O projeto MazeSolver oferece várias funcionalidades, sendo elas:
 
@@ -86,16 +96,6 @@ Controle do Solucionador:: Os usuários podem controlar o solucionador, incluind
 
 * {empty}
 Visualização do Resultado:: O MazeSolver destaca o caminho ótimo encontrado na interface, permitindo que os usuários visualizem a solução final de forma clara.
-
-==== Controles do solucionador
-Ao clicar no botão de busca é exibido os botões usados para controlar o solucionador sendo eles: voltar para a interface anterior, executar/parar solucionador, avançar um passo e retroceder um passo.
-
-[horizontal]
-Voltar:: Sem segredos, ao clicar faz retornar a interface anterior.
-
-Executar ou parar solucionador:: Quando não em execução faz o solucionador procurar o caminho do ponto inicial ao final a partir do último passo dado. Quando já em execução faz parar o solucionador no passo atual.
-
-Botões de passo:: Com eles é possível fazer o solucionador "`andar`" ou retrocederfootnote:[ao retroceder, as direções já testadas do passo não serão mais testadas novamente.] um passo, muito simples.
 
 === Compilando o projeto
 
