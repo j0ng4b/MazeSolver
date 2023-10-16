@@ -1,0 +1,149 @@
+= MazeSolver
+:source-highlighter: coderay
+:toc:
+:toc-title: Caminhos
+:toclevels: 5
+:toc-location: preamble
+
+=== Partida
+*MazeSolver* é um solucionador de labirintos, com ele é possível definir um ponto inicial e outro final e deixar o solucionador achar o caminho de um ponto a outro ou ver passo a passo como o solucionador chega até o ponto final.
+
+==== Funcionamento
+O solucionador usa um tipo de algoritmo de *backtraking*, sendo mais específico, não é o estilo *recursivo* do backtraking mas sim um baseado em *pilha*.
+
+A cada passo dado do solucionador ele põe esse passo em uma pilha quando um caminho não tem possibilidades de continuar seguindo é retirado esse passo da pilha e testado uma nova direção a partir do passo anterior. De maneira teórica acaba sendo um pouco confuso, mas para ilustrar o que quero dizer, veja o sequinte trecho de código:
+
+[source,c]
+----
+337    } else {
+338        maze->stack.top--;
+339        return;
+340    }
+...
+...
+...
+348    maze->stack.states[++maze->stack.top] = (solver_state_t) {
+349        .pos_x = state.pos_x,
+350        .pos_y = state.pos_y,
+351
+352        .direction = 0,
+353        .valid_directions =
+354            maze_get_walls(maze, state.pos_x, state.pos_y) ^ 0xF
+355                // A direção que levou a aquela posição não pode ser considerada
+356                // uma direção valida, por isso é removida.
+357                ^ (1 << opposite_dir[state.direction])
+358    };
+
+----
+
+Na primeira parte do trecho mostra a remoção de um passo inválido já a segunda parte mostra o _push_ de um passo para o topo da pilha do backtraking.
+
+==== Fluxo de funcionamento
+
+O MazeSolver opera com um fluxo de funcionamento que abrange desde a entrada de dados até a saída do resultado final. Abaixo, descrevemos os principais passos desse processo:
+
+    1. *Geração Automática do Labirinto*:
+O programa gera automaticamente um labirinto, exibido na interface do usuário (UI). Cada célula do labirinto pode ser um obstáculo ou um caminho livre.
+    2. *Seleção de Pontos de Início e Destino*:
+O usuário interage com a UI para selecionar o ponto de início e o ponto de destino dentro do labirinto.
+    3. *Início da Resolução*:
+Após a seleção dos pontos de início e destino, o usuário inicia o processo de resolução.
+    4. *Algoritmo de Backtracking*:
+O Módulo de Resolução aplica o algoritmo de Backtracking para encontrar o caminho. Cada passo é registrado em uma pilha.
+    5. *Feedback em Tempo Real*:
+A UI atualiza continuamente, mostrando o progresso do solucionador à medida que ele navega pelo labirinto. Os passos percorridos até a solução são exibidos em tempo real.
+    6. *Determinação do Caminho*:
+O algoritmo continua até encontrar o caminho entre os pontos de início e destino.
+    7. *Exibição do Resultado*:
+O caminho ótimo encontrado é destacado na UI, permitindo que o usuário visualize a solução final.
+
+O fluxo de funcionamento do MazeSolver oferece uma experiência interativa e informativa aos usuários, desde a configuração inicial do labirinto até a exibição do caminho. Essa abordagem garante que a resolução de labirintos seja envolvente.
+
+=== Uso da interface
+A interface foi pensada para ser simples e funcional ao mesmo tempo então nela inicialmente há quatro elementos: o labirinto, o botão de busca de caminho, e os botões de adicionar/remover os pontos do labirinto.
+
+[horizontal]
+O labirinto:: Não há segredos, é onde pode ser definido os pontos
+
+Botão de busca:: Apenas ativo quando os pontos foram definidos, quando clicado mostra os botões usados para controle do solucionador.
+
+Botões de pontos:: Também nada complexo, um adiciona ou remove o ponto inicial do labirinto e o outro faz o mesmo, mas para o ponto final.
+
+=== Funcionalidades
+O projeto MazeSolver oferece várias funcionalidades, sendo elas:
+
+* {empty}
+Resolução de Labirintos:: O MazeSolver é capaz de resolver labirintos automaticamente, encontrando o caminho mais curto entre o ponto de início e o ponto de destino.
+
+* {empty}
+Interação do Usuário:: Os usuários podem interagir com a interface para definir os pontos de início e destino no labirinto, além de controlar o processo de resolução.
+
+* {empty}
+Feedback em Tempo Real:: A interface fornece feedback em tempo real sobre o progresso do solucionador, permitindo que os usuários acompanhem o processo de resolução.
+
+* {empty}
+Controle do Solucionador:: Os usuários podem controlar o solucionador, incluindo a capacidade de iniciar, parar, avançar e retroceder no processo de resolução.
+
+* {empty}
+Visualização do Resultado:: O MazeSolver destaca o caminho ótimo encontrado na interface, permitindo que os usuários visualizem a solução final de forma clara.
+
+==== Controles do solucionador
+Ao clicar no botão de busca é exibido os botões usados para controlar o solucionador sendo eles: voltar para a interface anterior, executar/parar solucionador, avançar um passo e retroceder um passo.
+
+[horizontal]
+Voltar:: Sem segredos, ao clicar faz retornar a interface anterior.
+
+Executar ou parar solucionador:: Quando não em execução faz o solucionador procurar o caminho do ponto inicial ao final a partir do último passo dado. Quando já em execução faz parar o solucionador no passo atual.
+
+Botões de passo:: Com eles é possível fazer o solucionador "`andar`" ou retrocederfootnote:[ao retroceder, as direções já testadas do passo não serão mais testadas novamente.] um passo, muito simples.
+
+=== Compilando o projeto
+
+Para compilar o projeto existem duas alternativas, usando o `` *Code::Blocks*`` ou utilizando o utilitário ``*make*``.
+
+==== Compilando com o Code::Blocks
+Essa é a forma mais simples de compilar o projeto, é só abrir o arquivo ``Game.cbp`` que é projeto do Code::Blocks com ele aberto é só clicar no botão de compilação e pronto, nada mais precisa ser feito, só esperar terminar de compilar e depois disso é possível executar o projeto.
+
+==== Compilando usando make
+Também é simples de compilar por esse meio, só que exige um pouco mais de capacidade de quem vai compilar (capacidade além de saber clicar em botões) por precisar de maior conhecimento de como programação funciona na vida real, isto é, precisa que quem vai compilar saiba compilar de verdade as coisa e saibam instalar ferramentas além da IDE. Feita minha crítica para compilar é simples.
+
+Na raiz do projeto (lugar onde tem arquivos como Makefile ou Game.cbp) abra um terminal/cmd nessa pasta ou vá para essa pasta, feito isso, basta digitar (sem $):
+
+[source,bash]
+----
+$ make
+----
+
+Pronto, é só isso e caso queira compilar mais rápido é só usar:
+[source,bash]
+----
+$ make -j
+----
+
+=== Perguntas frequentes (FAQ)
+
+[qanda]
+Não consigo compilar::
+Para isso estar acontecendo há três probabilidades:
++
+--
+1. Você está usando Windows, nesse caso não posso fazer nada por você, acho que ninguém pode a final, essa é uma plataforma complicada para desenvolver projetos um pouco maiores, minha sincera sugestão é que use outro sistema :)
+
+2. Você está no Mac OSX, nesse caso é até compreensível porque ninguém no grupo tinha um Mac então apesar de ser possível compilar nativamente para Mac OSX, não foram feito testes, você está a própria sorte.
+
+3. Derivados do Linux, se você está tendo dificuldades para compilar no Linux sinto muito mas o problema é você.
+--
++
+At.te, Jonatha Gabriel.
+
+Como gerar um novo labirinto::
+No momento que isso aqui foi escrito só existe um jeito: abrir e fechar o programa, num futuro é possível que essa função seja adicionada.
+
+=== Licença
+
+O código desenvolvido para esse projeto está licenciado sob os termos da licença `MIT` caso queira saber mais olhe o arquivo `LICENSE`.
+
+*Outros componetes* (assets, bibliotecas de terceiros e etc.) estão licenciado sob suas próprias licenças sendo assim o direito de cada um é *reservado aos seus respectivos autores*, para saber mais refira-se ao arquivo de licença do componente em questão.
+
+=== Chegada
+Neste documento, apresentamos uma visão abrangente do projeto MazeSolver, incluindo sua finalidade, funcionamento, técnica escolhida e principais funcionalidades. O MazeSolver representa um esforço significativo para alcançar seu objetivo de resolver labirintos de forma eficiente e interativa.
